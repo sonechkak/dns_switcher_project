@@ -89,4 +89,3 @@ service-monitoring-site/
 
 ## Лицензия
 см. файл LICENSE.txt
-```
