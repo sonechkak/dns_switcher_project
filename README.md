@@ -39,7 +39,7 @@ CHECK_INTERVAL_SECONDS=5
 
 Для запуска сервиса выполните команду:
 ```bash
-python src/config.py
+python src/monitor.py
 ```
 
 ## Настройка
@@ -67,11 +67,17 @@ python src/config.py
 
 ```
 service-monitoring-site/
-├── monitor.py         # Главный скрипт мониторинга
-├── crud.py           # Модуль для работы с записями
-├── requirements.txt   # Список зависимостей
-├── .env              # Файл с настройками
-└── README.md         # Документация
+├── src                    # Код проекта
+│   ├── routes             # Маршруты
+│   ├──   |── records.py   # Маршрут для работы с записями
+│   ├──   |── zones.py     # Маршрут для работы с зонами
+│   ├── main.py            # Запуск FastAPI приложения
+│   ├── monitor.py         # Скрипт мониторинга сайта
+│   ├── utils.py           # Вспомогательные функции
+├── pyproject.toml         # Конфигурация Poetry и зависимости проекта
+├── poetry.lock            # Фиксация версий зависимостей
+├── .env                   # Файл с env
+└── README.md              # Документация
 ```
 
 ## Зависимости
