@@ -3,7 +3,7 @@ import requests
 import logging
 import asyncio
 from dotenv import load_dotenv
-from namespaces import update_existing_record
+from cloudflare.namespaces import update_existing_record
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
