@@ -39,5 +39,5 @@ def get_record_id(dns_record_name: str) -> str:
             record_id = record_id["id"]
     return record_id["id"]
 
-print(get_zone_id(DNS_RECORD_NAME))
-print(get_record_id(MONITORED_SITE_URL))
+# print(get_zone_id(DNS_RECORD_NAME))
+# print(get_record_id(MONITORED_SITE_URL))

@@ -12,8 +12,8 @@ DNS_RECORD_NAMES = os.getenv('DNS_RECORD_NAMES')
 DNS_RECORD_TYPE = os.getenv('DNS_RECORD_TYPE')
 PRIMARY_IP = os.getenv('PRIMARY_IP')
 API_TOKEN = os.getenv('CLOUDFLARE_API_TOKEN')
-RECORD_ID = str(get_record_id())
-CLOUDFLARE_ZONE_ID = str(get_zone_id())
+# RECORD_ID = str(get_record_id())
+# CLOUDFLARE_ZONE_ID = str(get_zone_id())
 
 
 async def update_existing_record() -> dict:
