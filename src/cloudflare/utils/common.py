@@ -14,6 +14,7 @@ def get_zone_id():
     }
     response = requests.get(url, headers=headers)
     response_data = response.json()
+
     return response_data["result"][0]["id"]
 
 

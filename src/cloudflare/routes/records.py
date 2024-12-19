@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from src.namespaces import get_min_dns_records, update_existing_record, get_records, delete_record_by_id
+from src.cloudflare.namespaces import get_min_dns_records, update_existing_record, get_records, delete_record_by_id
 
 router = APIRouter()
 

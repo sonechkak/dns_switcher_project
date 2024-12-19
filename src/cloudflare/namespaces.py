@@ -2,7 +2,7 @@ import os
 import logging
 import requests
 from dotenv import load_dotenv
-from src.utils.common import get_zone_id, get_record_id
+from src.cloudflare.utils.common import get_zone_id, get_record_id
 
 load_dotenv()
 

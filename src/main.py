@@ -1,6 +1,6 @@
 from fastapi import FastAPI
-from src.routes.zones import router as zones_router
-from src.routes.records import router as records_router
+from src.cloudflare.routes.zones import router as zones_router
+from src.cloudflare.routes.records import router as records_router
 
 app = FastAPI()
 
