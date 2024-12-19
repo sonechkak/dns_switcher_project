@@ -14,6 +14,22 @@ PRIMARY_IP = os.getenv('PRIMARY_IP')
 API_TOKEN = os.getenv('CLOUDFLARE_API_TOKEN')
 RECORD_ID = os.getenv('CLOUDFLARE_RECORD_ID')
 
+def get_zone_id() -> str:
+    list_zones_url = "https://api.cloudflare.com/client/v4/zones"
+    headers = {
+        "Authorization": f"Bearer {API_TOKEN}",
+        "Content-Type": "application/json"
+    }
+    response = requests.get(list_zones_url, headers=headers)
+    response_data = response.json()
+    if response.status_code == 200 and response_data.get("success"):
+        logging.info("Запрос успешно выполнен")
+    else:
+        logging.error(f"Не удалось выполнить запрос: {response_data}")
+    return response_data["result"][0]["id"]
+
+CLOUDFLARE_ZONE_ID = str(get_zone_id())
+
 
 async def update_existing_record() -> dict:
     url = f"https://api.cloudflare.com/client/v4/zones/{CLOUDFLARE_ZONE_ID}/dns_records/{RECORD_ID}"
