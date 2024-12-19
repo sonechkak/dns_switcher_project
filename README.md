@@ -20,8 +20,8 @@
 
 1. Клонируйте репозиторий и перейдите в директорию проекта:
 ```bash
-git clone <url-репозитория>
-cd service-monitoring-site
+git clone git@github.com:sonechkak/dns_switcher_project.git
+cd dns_switcher_project
 ```
 
 2. Установите зависимости с помощью Poetry:
