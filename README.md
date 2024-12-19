@@ -31,7 +31,7 @@ poetry install
 
 3. Создайте файл .env в корневой директории проекта и добавьте следующие настройки:
 ```env
-MONITORED_SITE_URL=https://ваш-сайт.ru
+SITE_MAP=your_site.com:dev.site.com,your_site.com:127.0.0.1;your_site1.com:dev.site1.com:127.0.0.1
 CHECK_INTERVAL_SECONDS=5
 ```
 
