@@ -1,6 +1,7 @@
 import asyncio
 import os
 import logging
+import time
 
 import requests
 from dotenv import load_dotenv
@@ -16,7 +17,7 @@ load_dotenv()
 
 # Загрузка переменных окружения
 SITE_MAP = os.getenv("DATA_MAP")
-CHECK_INTERVAL_SECONDS = int(os.getenv("CHECK_INTERVAL_SECONDS", 5))
+CHECK_INTERVAL_SECONDS = int(os.getenv("CHECK_INTERVAL_SECONDS"))
 FAILURE_COUNT = 0
 
 
@@ -42,37 +43,25 @@ async def monitor_site():
     while True:
         try:
             for site in monitored_sites():
-                site = f"https://{site}"
+                site = f"http://{site}"
                 response = requests.get(site)
                 logging.info(f"Проверка сайта: {site}")
                 if response.status_code == 200:
                     logging.info(f"Сайт доступен: {site}")
-                    if response.headers.get('Content-Type') == 'application/json':
-                        try:
-                            logging.debug(f"Ответ сервера: {response.text}")
-                            result = response.json()
-                        except requests.exceptions.JSONDecodeError:
-                            logging.error("Ошибка декодирования JSON: %s", response.text)
-                            result = None
-                    else:
-                        logging.error("Ответ не является JSON: %s", response.text)
-                        result = None
+                    result = True
                 else:
                     logging.warning(f"Получен некорректный статус ответа: {response.status_code}")
                     result = None
 
-                if result and response.status_code != 200:
+                if result is None and response.status_code != 200:
                     FAILURE_COUNT += 1
                     logging.info(f"Счетчик неудач: {FAILURE_COUNT}")
-                    if FAILURE_COUNT == 2:
+                    if FAILURE_COUNT == 5:
                         await update_existing_record()
-                        logging.info("Запись обновлена")
                         FAILURE_COUNT = 0
+
+            time.sleep(CHECK_INTERVAL_SECONDS)
 
         except Exception as e:
             logging.error(f"Произошла ошибка: {e}")
-            await asyncio.sleep(CHECK_INTERVAL_SECONDS)
-
-
-if __name__ == "__main__":
-    asyncio.run(monitor_site())
+            time.sleep(CHECK_INTERVAL_SECONDS)

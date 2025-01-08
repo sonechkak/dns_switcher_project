@@ -10,6 +10,7 @@ DNS_RECORD_NAME = os.getenv("DNS_RECORD_NAMES")
 
 
 def get_zone_id(monitored_site_url: str) -> str:
+    global zone_id
     url = f"https://api.cloudflare.com/client/v4/zones/"
     headers = {
         "Authorization": f"Bearer {API_TOKEN}",

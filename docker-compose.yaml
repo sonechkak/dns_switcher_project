@@ -1,0 +1,5 @@
+services:
+  nginx:
+    image: nginx:stable-alpine3.20-perl
+    ports:
+      - 80:80
