@@ -1,14 +1,13 @@
 import requests
-from src.cloudflare.namespaces import *
+from src.cloudflare.data import *
+from src.cloudflare.monitor import MONITORED_SITES
 
-load_dotenv()
 
 zone_id = None
 record_id = None
 
 
 def get_zones_id(monitored_sites: list) -> str:
-    print(CLOUDFLARE_API_TOKEN)
     global zone_id
     url = f"https://api.cloudflare.com/client/v4/zones/"
     headers = {
@@ -25,7 +24,8 @@ def get_zones_id(monitored_sites: list) -> str:
 
 def get_record_id(dns_record_name: str) -> str:
     global record_id
-    url = f"https://api.cloudflare.com/client/v4/zones/{CLOUDFLARE_ZONE_ID}/dns_records/"
+    zone_id = get_zones_id()
+    url = f"https://api.cloudflare.com/client/v4/zones/{zone_id}/dns_records/"
     headers = {
         "Authorization": f"Bearer {CLOUDFLARE_API_TOKEN}",
         "Content-Type": "application/json"

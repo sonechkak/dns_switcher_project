@@ -1,9 +1,12 @@
 import time
 
 import requests
-from src.cloudflare.namespaces import *
+from src.cloudflare.data import *
 from src.cloudflare.logger import logging
 
+load_dotenv()
+
+CHECK_INTERVAL_SECONDS = int(os.getenv("CHECK_INTERVAL_SECONDS"))
 MONITORED_SITES = get_data()
 
 async def monitor_site():
