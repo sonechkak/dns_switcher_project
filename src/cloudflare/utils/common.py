@@ -1,44 +1,43 @@
-import os
 import requests
-from dotenv import load_dotenv
+from src.cloudflare.namespaces import *
 
 load_dotenv()
 
-API_TOKEN = os.getenv("CLOUDFLARE_API_TOKEN")
-MONITORED_SITE_URL = os.getenv("MONITORED_SITE_URL")
-DNS_RECORD_NAME = os.getenv("DNS_RECORD_NAMES")
+zone_id = None
+record_id = None
 
 
-def get_zone_id(monitored_site_url: str) -> str:
+def get_zones_id(monitored_sites: list) -> str:
+    print(CLOUDFLARE_API_TOKEN)
     global zone_id
     url = f"https://api.cloudflare.com/client/v4/zones/"
     headers = {
-        "Authorization": f"Bearer {API_TOKEN}",
+        "Authorization": f"Bearer {CLOUDFLARE_API_TOKEN}",
         "Content-Type": "application/json"
     }
     response = requests.get(url, headers=headers)
     response_data = response.json()
     for zone_id in response_data["result"]:
-        if zone_id["name"] == monitored_site_url:
+        if zone_id["name"] in monitored_sites:
             zone_id = zone_id["id"]
     return zone_id
 
 
-CLOUDFLARE_ZONE_ID = get_zone_id(MONITORED_SITE_URL)
-
-
 def get_record_id(dns_record_name: str) -> str:
+    global record_id
     url = f"https://api.cloudflare.com/client/v4/zones/{CLOUDFLARE_ZONE_ID}/dns_records/"
     headers = {
-        "Authorization": f"Bearer {API_TOKEN}",
+        "Authorization": f"Bearer {CLOUDFLARE_API_TOKEN}",
         "Content-Type": "application/json"
     }
     response = requests.get(url, headers=headers)
     response_data = response.json()
-    for record_id in response_data["result"]:
-        if record_id["name"] == dns_record_name:
-            record_id = record_id["id"]
-    return record_id["id"]
+    if "result" in response_data and response_data["result"] is not None:
+        for record in response_data["result"]:
+            if record["name"] == dns_record_name:
+                record_id = record["id"]
+                break
+    else:
+        raise ValueError("Invalid response from Cloudflare API or no DNS records found.")
 
-# print(get_zone_id(DNS_RECORD_NAME))
-# print(get_record_id(MONITORED_SITE_URL))
+    return record_id

@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from src.cloudflare.namespaces import get_min_dns_records, update_existing_record, get_records, delete_record_by_id
+from src.cloudflare.crud import get_min_dns_records, update_existing_record, get_records, delete_record_by_id
 
 router = APIRouter()
 
@@ -13,6 +13,7 @@ async def get_full_dns_records() -> dict:
 @router.get("/minify")
 async def get_minify_dns_records():
     return await get_min_dns_records()
+
 
 @router.put("/update/")
 async def update_dns_record_by_id() -> dict:

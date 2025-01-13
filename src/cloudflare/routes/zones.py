@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from src.cloudflare.namespaces import get_all_zones
+from src.cloudflare.crud import get_all_zones
 
 router = APIRouter()
 

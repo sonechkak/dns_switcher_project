@@ -1,117 +1,83 @@
 import os
-import logging
 
-import aiohttp
-import requests
 from dotenv import load_dotenv
-from src.cloudflare.utils.common import CLOUDFLARE_ZONE_ID, get_record_id
+from fastapi.openapi.models import ParameterInType
+
+from src.cloudflare.crud import *
+from src.cloudflare.logger import logging
 
 load_dotenv()
 
+SITE_MAP = list(map(str, os.getenv("DATA_MAP").split(";")))
+
+
+def get_data():
+    data = []
+    for site in SITE_MAP:
+        parts = site.split(":")
+        zone = parts[0]
+        records = parts[1].split(",")
+        ips = parts[2].split(",")
+        data.append({
+            "zone": zone,
+            "records": records,
+            "ips": ips,
+            "counter": 0
+        })
+    return data
+
+
+async def update_site_counter(site: dict):
+    logging.info(f"Проверка сайта: {site['zone']}")
+    site_zone_id = get_zone_id_by_name(site["zone"])
+    for record_name in site["records"]:
+        logging.info(f"Проверка записи: {record_name}")
+        record_id = get_record_id_by_name(site_zone_id, record_name)
+        if check_site_available(site["zone"]):
+            logging.info(f"Сайт {site['zone']} доступен")
+            site["counter"] = 0
+        else:
+            logging.info(f"Сайт {site['zone']} недоступен. Увеличиваем счетчик")
+            site["counter"] += 1
+            logging.info(f"Счетчик: {site['counter']}")
+            if site["counter"] == 5:
+                logging.info(f"Сайт {site['zone']} недоступен более 5 раз. Обновляем запись")
+                await update_existing_record(site_zone_id, record_id, record_name, site)
+                site["counter"] = 0
+
+
+def monitored_sites():
+    return set(site["zone"] for site in get_data())
+
+
+def sites_records():
+    records_set = set()
+    for site in get_data():
+        for record in site["records"]:
+            records_set.add(record)
+    return records_set
+
+
+def record_ips():
+    ips_set = set()
+    for site in get_data():
+        for ip in site["ips"]:
+            ips_set.add(ip)
+    return ips_set
+
+
+def counters():
+    return {site["zone"]: site["counter"] for site in get_data()}
+
 # ENV
-MONITORED_SITE_URL = os.getenv('MONITORED_SITE_URL')
+CLOUDFLARE_API_TOKEN = os.getenv('CLOUDFLARE_API_TOKEN')
 CLOUDFLARE_EMAIL = os.getenv('CLOUDFLARE_EMAIL')
-DNS_RECORD_NAMES = os.getenv('DNS_RECORD_NAMES')
 DNS_RECORD_TYPE = os.getenv('DNS_RECORD_TYPE')
 PRIMARY_IP = os.getenv('PRIMARY_IP')
 SECONDARY_IP = os.getenv('SECONDARY_IP')
-API_TOKEN = os.getenv('CLOUDFLARE_API_TOKEN')
-RECORD_ID = str(get_record_id(MONITORED_SITE_URL))
 
-
-async def update_existing_record() -> dict:
-    url = f"https://api.cloudflare.com/client/v4/zones/{CLOUDFLARE_ZONE_ID}/dns_records/{RECORD_ID}"
-
-    logging.info(f"Отправляем запрос на URL: {url}")
-    logging.info(f"RECORD_ID: {RECORD_ID}")
-
-    headers = {
-        "X-Auth-Email": CLOUDFLARE_EMAIL,
-        "Authorization": f"Bearer {API_TOKEN}",
-        "Content-Type": "application/json"
-    }
-
-    data = {
-        "type": DNS_RECORD_TYPE,
-        "name": DNS_RECORD_NAMES,
-        "content": SECONDARY_IP,
-        "ttl": 1,
-        "proxied": False
-    }
-
-    logging.info(f"Отправляемые данные: {data}")
-
-    async with aiohttp.ClientSession() as session:
-        async with session.put(url, headers=headers, json=data) as response:
-            response_data = await response.json()
-            logging.info(f"Статус ответа: {response.status}")
-
-            if response.status == 200 and response_data.get("success") is True:
-                logging.info("Запись успешно обновлена")
-            else:
-                logging.error(f"Не удалось обновить запись: {response_data}")
-
-            return response_data
-
-
-
-async def get_all_zones() -> dict:
-    url = "https://api.cloudflare.com/client/v4/zones"
-    headers = {
-        "Authorization": f"Bearer {API_TOKEN}",
-        "Content-Type": "application/json"
-    }
-    response = requests.get(url, headers=headers)
-    response_data = response.json()
-    if response.status_code == 200 and response_data.get("success"):
-        logging.info("Запрос успешно выполнен")
-    else:
-        logging.error(f"Не удалось выполнить запрос: {response_data}")
-    return response_data
-
-
-async def get_min_dns_records() -> dict:
-    url = f"https://api.cloudflare.com/client/v4/zones/{CLOUDFLARE_ZONE_ID}/dns_records/export/"
-    headers = {
-        "Authorization": f"Bearer {API_TOKEN}",
-        "Content-Type": "application/json"
-    }
-    response = requests.get(url, headers=headers)
-    response_data = response.text
-    result = {"data": response_data}
-    if response.status_code == 200:
-        logging.info("Запрос успешно выполнен")
-    else:
-        logging.error(f"Не удалось выполнить запрос: {response_data}")
-    return result
-
-
-async def get_records() -> dict:
-    url = f"https://api.cloudflare.com/client/v4/zones/{CLOUDFLARE_ZONE_ID}/dns_records/"
-    headers = {
-        "Authorization": f"Bearer {API_TOKEN}",
-        "Content-Type": "application/json"
-    }
-    response = requests.get(url, headers=headers)
-    response_data = response.json()
-    if response.status_code == 200 and response_data.get("success"):
-        logging.info("Запрос успешно выполнен")
-    else:
-        logging.error(f"Не удалось выполнить запрос: {response_data}")
-    return response_data
-
-
-async def delete_record_by_id() -> dict:
-    url = f"https://api.cloudflare.com/client/v4/zones/{CLOUDFLARE_ZONE_ID}/dns_records/{RECORD_ID}"
-    headers = {
-        "X-Auth-Email": CLOUDFLARE_EMAIL,
-        "Authorization": f"Bearer {API_TOKEN}",
-        "Content-Type": "application/json"
-    }
-    response = requests.delete(url, headers=headers)
-    response_data = response.json()
-    if response.status_code == 200 and response_data.get("success"):
-        logging.info("Запись успешно удалена")
-    else:
-        logging.error(f"Не удалось удалить запись: {response_data}")
-    return response_data
+MONITORED_SITES = list(monitored_sites())
+SITES_RECORDS = list(sites_records())
+RECORD_IPS = list(record_ips())
+COUNTERS = counters()
+CHECK_INTERVAL_SECONDS = int(os.getenv("CHECK_INTERVAL_SECONDS"))
